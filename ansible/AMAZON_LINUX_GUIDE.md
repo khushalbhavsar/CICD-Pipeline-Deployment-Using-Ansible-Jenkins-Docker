@@ -124,6 +124,12 @@ ansible_python_interpreter=/usr/bin/python3
 
 ## Troubleshooting
 
+### Issue: "No package java-11-openjdk-devel available"
+**Solution**: The playbook now automatically tries fallback Java packages (Amazon Corretto, etc.)
+
+### Issue: "Failed to validate GPG signature for jenkins"
+**Solution**: The playbook now imports the Jenkins GPG key before installing. Make sure to `git pull` to get the latest fix.
+
 ### Issue: "No such file or directory: apt-get"
 **Solution**: Your system is RHEL-based. The playbooks now detect this and use `yum` instead.
 

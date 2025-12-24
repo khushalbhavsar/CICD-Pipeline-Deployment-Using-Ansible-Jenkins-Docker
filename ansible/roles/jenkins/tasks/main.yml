@@ -79,6 +79,15 @@
   register: jenkins_install
   when: ansible_os_family == "Debian"
 
+- name: Add Jenkins GPG key - RHEL
+  rpm_key:
+    key: https://pkg.jenkins.io/redhat/jenkins.io.key
+    state: present
+  register: jenkins_key_rhel
+  until: jenkins_key_rhel is succeeded
+  retries: 3
+  when: ansible_os_family == "RedHat"
+
 - name: Add Jenkins repository - RHEL
   yum_repository:
     name: jenkins
