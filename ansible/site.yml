@@ -10,11 +10,17 @@
     docker_image: "{{ app_name }}:latest"
   
   pre_tasks:
-    - name: Update package cache
+    - name: Update package cache (Debian-based systems)
       apt:
         update_cache: yes
         cache_valid_time: 3600
       when: ansible_os_family == "Debian"
+    
+    - name: Update package cache (RHEL-based systems)
+      yum:
+        name: '*'
+        state: latest
+      when: ansible_os_family == "RedHat"
   
   roles:
     - role: jenkins

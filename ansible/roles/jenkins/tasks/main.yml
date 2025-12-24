@@ -1,34 +1,67 @@
 ---
 # Jenkins Installation and Configuration Role
 
-- name: Install Java (OpenJDK 11)
+- name: Install Java (OpenJDK 11) - Debian
   apt:
     name: openjdk-11-jdk
     state: present
     update_cache: yes
   register: java_install
   notify: restart jenkins
+  when: ansible_os_family == "Debian"
 
-- name: Add Jenkins GPG key
+- name: Install Java (OpenJDK 11) - RHEL
+  yum:
+    name: java-11-openjdk-devel
+    state: present
+  register: java_install
+  notify: restart jenkins
+  when: ansible_os_family == "RedHat"
+
+- name: Add Jenkins GPG key - Debian
   apt_key:
     url: https://pkg.jenkins.io/debian/jenkins.io.key
     state: present
   register: jenkins_key
   until: jenkins_key is succeeded
   retries: 3
+  when: ansible_os_family == "Debian"
 
-- name: Add Jenkins repository
+- name: Add Jenkins repository - Debian
   apt_repository:
     repo: deb https://pkg.jenkins.io/debian-stable binary/
     state: present
     filename: jenkins
+  when: ansible_os_family == "Debian"
 
-- name: Install Jenkins
+- name: Install Jenkins - Debian
   apt:
     name: jenkins
     state: present
     update_cache: yes
   register: jenkins_install
+  when: ansible_os_family == "Debian"
+
+- name: Add Jenkins repository - RHEL
+  yum_repository:
+    name: jenkins
+    description: Jenkins Repository
+    baseurl: https://pkg.jenkins.io/redhat-stable/
+    gpgcheck: yes
+    gpgkey: https://pkg.jenkins.io/redhat/jenkins.io.key
+    state: present
+  register: jenkins_repo
+  until: jenkins_repo is succeeded
+  retries: 3
+  when: ansible_os_family == "RedHat"
+
+- name: Install Jenkins - RHEL
+  yum:
+    name: jenkins
+    state: present
+    update_cache: yes
+  register: jenkins_install
+  when: ansible_os_family == "RedHat"
 
 - name: Start Jenkins service
   service:

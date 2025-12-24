@@ -1,7 +1,8 @@
 ---
 # Docker Installation and Configuration Role
 
-- name: Install prerequisite packages
+# Debian-based systems (Ubuntu)
+- name: Install prerequisite packages - Debian
   apt:
     name:
       - apt-transport-https
@@ -12,27 +13,31 @@
       - software-properties-common
     state: present
     update_cache: yes
+  when: ansible_os_family == "Debian"
 
-- name: Add Docker GPG key
+- name: Add Docker GPG key - Debian
   apt_key:
     url: https://download.docker.com/linux/ubuntu/gpg
     state: present
   register: docker_key
   until: docker_key is succeeded
   retries: 3
+  when: ansible_os_family == "Debian"
 
 - name: Get Ubuntu version codename
   shell: lsb_release -cs
   register: ubuntu_version
   changed_when: false
+  when: ansible_os_family == "Debian"
 
-- name: Add Docker repository
+- name: Add Docker repository - Debian
   apt_repository:
     repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ubuntu_version.stdout }} stable
     state: present
     filename: docker
+  when: ansible_os_family == "Debian"
 
-- name: Install Docker CE
+- name: Install Docker CE - Debian
   apt:
     name:
       - docker-ce
@@ -42,7 +47,39 @@
     state: present
     update_cache: yes
   notify: restart docker
+  when: ansible_os_family == "Debian"
 
+# RHEL-based systems (Amazon Linux, CentOS, RHEL)
+- name: Install prerequisite packages - RHEL
+  yum:
+    name:
+      - yum-utils
+      - device-mapper-persistent-data
+      - lvm2
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Add Docker repository - RHEL
+  yum_repository:
+    name: docker-ce
+    description: Docker CE Repository
+    baseurl: https://download.docker.com/linux/{{ 'fedora' if ansible_distribution == 'Fedora' else 'rhel' }}/{{ ansible_distribution_major_version }}/$basearch/stable
+    gpgcheck: yes
+    gpgkey: https://download.docker.com/linux/{{ 'fedora' if ansible_distribution == 'Fedora' else 'rhel' }}/gpg
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Install Docker CE - RHEL
+  yum:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+    state: present
+  notify: restart docker
+  when: ansible_os_family == "RedHat"
+
+# Common to all
 - name: Enable Docker service
   service:
     name: docker
@@ -51,12 +88,10 @@
     daemon_reload: yes
 
 - name: Wait for Docker daemon
-  uri:
-    url: unix:///var/run/docker.sock
+  wait_for:
+    path: /var/run/docker.sock
+    timeout: 30
   register: docker_socket
-  until: docker_socket is succeeded
-  retries: 10
-  delay: 2
 
 - name: Create docker group
   group:
