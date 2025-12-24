@@ -1,0 +1,38 @@
+---
+# Quick diagnostics playbook for Amazon Linux 2
+- hosts: localhost
+  connection: local
+  gather_facts: yes
+
+  tasks:
+    - name: Display system information
+      debug:
+        msg:
+          - "Distribution: {{ ansible_distribution }}"
+          - "Distribution Version: {{ ansible_distribution_version }}"
+          - "Distribution Major Version: {{ ansible_distribution_major_version }}"
+          - "OS Family: {{ ansible_os_family }}"
+          - "Python: {{ ansible_python_version }}"
+
+    - name: List available Java packages
+      shell: yum search java-11 2>&1 | grep -E "java-11.*devel|java-11.*openjdk|java-11.*corretto"
+      register: java_packages
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Show available Java packages
+      debug:
+        var: java_packages.stdout_lines
+      when: java_packages.stdout_lines | length > 0
+
+    - name: Check what Java options are installed
+      shell: |
+        echo "=== Checking available Java packages ==="
+        yum list available "java-11*" 2>&1 | head -20
+      register: available_java
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Display available Java
+      debug:
+        var: available_java.stdout_lines

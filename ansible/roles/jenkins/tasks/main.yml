@@ -11,10 +11,47 @@
   when: ansible_os_family == "Debian"
 
 - name: Install Java (OpenJDK 11) - RHEL
-  yum:
-    name: java-11-openjdk-devel
-    state: present
-  register: java_install
+  block:
+    - name: Try installing java-11-openjdk-devel (Primary)
+      yum:
+        name: java-11-openjdk-devel
+        state: present
+      register: java_install
+      ignore_errors: yes
+  
+    - name: Try installing java-11-amazon-corretto-devel (Fallback 1)
+      yum:
+        name: java-11-amazon-corretto-devel
+        state: present
+      when: java_install is failed
+      register: java_install_fallback1
+      ignore_errors: yes
+  
+    - name: Try installing java-11-openjdk (Fallback 2 - without devel)
+      yum:
+        name: java-11-openjdk
+        state: present
+      when: 
+        - java_install is failed
+        - java_install_fallback1 is failed
+      register: java_install_fallback2
+      ignore_errors: yes
+  
+    - name: Try installing java-17-amazon-corretto (Fallback 3)
+      yum:
+        name: java-17-amazon-corretto
+        state: present
+      when:
+        - java_install is failed
+        - java_install_fallback1 is failed
+        - java_install_fallback2 is failed
+      register: java_install_fallback3
+  
+    - name: Verify Java installation
+      shell: java -version
+      register: java_version
+      changed_when: false
+  
   notify: restart jenkins
   when: ansible_os_family == "RedHat"
 
