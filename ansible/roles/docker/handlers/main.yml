@@ -1,0 +1,9 @@
+---
+# Docker Role Handlers
+
+- name: restart docker
+  service:
+    name: docker
+    state: restarted
+    daemon_reload: yes
+  listen: "restart docker"

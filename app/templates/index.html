@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CI/CD Pipeline - Application Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🚀 CI/CD Pipeline Application</h1>
+                <p class="tagline">Automated Infrastructure Deployment Dashboard</p>
+            </div>
+        </header>
+
+        <!-- Status Section -->
+        <section class="status-section">
+            <div class="status-card status-healthy">
+                <div class="status-icon">✅</div>
+                <div class="status-info">
+                    <h3>Application Status</h3>
+                    <p class="status-value">Healthy</p>
+                    <p class="status-time" id="status-time">Last updated: Just now</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content Grid -->
+        <div class="content-grid">
+            <!-- Application Info Card -->
+            <section class="card info-card">
+                <h2>📋 Application Information</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Application Name</span>
+                        <span class="info-value">cicd-python-app</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Version</span>
+                        <span class="info-value">1.0.0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Environment</span>
+                        <span class="info-value">{{ environment }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Status</span>
+                        <span class="info-value">Running ✓</span>
+                    </div>
+                </div>
+                <div class="description">
+                    <p>End-to-End CI/CD Pipeline Automation using Ansible, Jenkins, and Docker</p>
+                </div>
+            </section>
+
+            <!-- Endpoints Card -->
+            <section class="card endpoints-card">
+                <h2>🔌 Available Endpoints</h2>
+                <div class="endpoints-list">
+                    <div class="endpoint">
+                        <div class="endpoint-method">GET</div>
+                        <div class="endpoint-info">
+                            <code>/health</code>
+                            <p>Health check endpoint for monitoring</p>
+                        </div>
+                    </div>
+                    <div class="endpoint">
+                        <div class="endpoint-method">GET</div>
+                        <div class="endpoint-info">
+                            <code>/</code>
+                            <p>Main application endpoint with info</p>
+                        </div>
+                    </div>
+                    <div class="endpoint">
+                        <div class="endpoint-method">GET</div>
+                        <div class="endpoint-info">
+                            <code>/info</code>
+                            <p>Detailed application metadata</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tech Stack Card -->
+            <section class="card tech-stack-card">
+                <h2>🛠️ Technology Stack</h2>
+                <div class="tech-grid">
+                    <div class="tech-item">
+                        <span class="tech-name">Ansible</span>
+                        <span class="tech-version">2.10+</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-name">Jenkins</span>
+                        <span class="tech-version">LTS</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-name">Docker</span>
+                        <span class="tech-version">Latest</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-name">Python</span>
+                        <span class="tech-version">3.9+</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-name">Flask</span>
+                        <span class="tech-version">2.3.2</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-name">Ubuntu</span>
+                        <span class="tech-version">20.04+</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features Card -->
+            <section class="card features-card">
+                <h2>✨ Key Features</h2>
+                <ul class="features-list">
+                    <li>✅ Automated infrastructure provisioning</li>
+                    <li>✅ Multi-stage CI/CD pipeline</li>
+                    <li>✅ Docker containerization</li>
+                    <li>✅ Comprehensive testing</li>
+                    <li>✅ Health monitoring</li>
+                    <li>✅ Production-ready configuration</li>
+                </ul>
+            </section>
+
+            <!-- Pipeline Flow Card -->
+            <section class="card pipeline-card">
+                <h2>📊 Pipeline Flow</h2>
+                <div class="pipeline-flow">
+                    <div class="flow-step">
+                        <div class="flow-icon">📝</div>
+                        <div class="flow-label">GitHub</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <div class="flow-icon">🏗️</div>
+                        <div class="flow-label">Jenkins</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <div class="flow-icon">🐳</div>
+                        <div class="flow-label">Docker</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <div class="flow-icon">🚀</div>
+                        <div class="flow-label">Deploy</div>
+                    </div>
+                </div>
+                <div class="pipeline-note">
+                    <span>Infrastructure Automation: Ansible</span>
+                </div>
+            </section>
+
+            <!-- Actions Card -->
+            <section class="card actions-card">
+                <h2>🔗 Quick Actions</h2>
+                <div class="actions-grid">
+                    <button class="action-btn" onclick="checkHealth()">
+                        <span>🏥</span>
+                        <span>Check Health</span>
+                    </button>
+                    <button class="action-btn" onclick="getInfo()">
+                        <span>ℹ️</span>
+                        <span>Get Info</span>
+                    </button>
+                    <button class="action-btn" onclick="viewDocs()">
+                        <span>📖</span>
+                        <span>View Docs</span>
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>🚀 CI/CD Pipeline Deployment Using Ansible, Jenkins, and Docker</p>
+            <p class="footer-meta">Made with ❤️ for DevOps professionals</p>
+        </footer>
+    </div>
+
+    <!-- Response Modal -->
+    <div id="responseModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Response</h2>
+            <pre id="modalBody" class="response-body"></pre>
+            <button class="close-btn" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        function checkHealth() {
+            fetch('/health')
+                .then(response => response.json())
+                .then(data => showModal('Health Check', JSON.stringify(data, null, 2)))
+                .catch(error => showModal('Error', 'Failed to fetch health: ' + error));
+        }
+
+        function getInfo() {
+            fetch('/info')
+                .then(response => response.json())
+                .then(data => showModal('Application Info', JSON.stringify(data, null, 2)))
+                .catch(error => showModal('Error', 'Failed to fetch info: ' + error));
+        }
+
+        function viewDocs() {
+            alert('Documentation available at: /docs/SETUP.md\n\nFor more information, visit the GitHub repository.');
+        }
+
+        function showModal(title, body) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalBody').textContent = body;
+            document.getElementById('responseModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('responseModal').style.display = 'none';
+        }
+
+        window.onclick = function (event) {
+            const modal = document.getElementById('responseModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Update status time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('status-time').textContent = 'Last updated: ' + now.toLocaleTimeString();
+        }
+
+        // Update time every second
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+
+</html>

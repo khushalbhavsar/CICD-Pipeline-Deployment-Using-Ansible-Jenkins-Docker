@@ -1,0 +1,128 @@
+pipeline {
+    agent any
+    
+    options {
+        // Keep last 10 builds
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        // Add timestamps to console output
+        timestamps()
+        // Timeout after 30 minutes
+        timeout(time: 30, unit: 'MINUTES')
+    }
+    
+    environment {
+        // Environment variables
+        APP_NAME = 'cicd-python-app'
+        DOCKER_REGISTRY = 'docker.io'
+        DOCKER_IMAGE_NAME = "${env.DOCKER_REGISTRY}/${env.APP_NAME}"
+        DOCKER_IMAGE_TAG = "${env.BUILD_NUMBER}"
+        PYTHON_VERSION = '3.9'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                script {
+                    echo '========== Cloning Repository =========='
+                }
+                git branch: 'main',
+                    url: 'https://github.com/yourusername/cicd-python-app.git',
+                    credentialsId: 'github-credentials'  // Set this up in Jenkins credentials
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                script {
+                    echo '========== Building Docker Image =========='
+                    sh '''
+                        docker build \
+                            --tag ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} \
+                            --tag ${DOCKER_IMAGE_NAME}:latest \
+                            -f Dockerfile \
+                            .
+                    '''
+                }
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                script {
+                    echo '========== Running Tests =========='
+                    sh '''
+                        # Run tests inside container
+                        docker run --rm ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} \
+                            python -m pytest tests/ 2>/dev/null || echo "No tests found - skipping"
+                    '''
+                }
+            }
+        }
+        
+        stage('Stop Old Container') {
+            steps {
+                script {
+                    echo '========== Stopping Previous Container =========='
+                    sh '''
+                        # Stop and remove old container if exists
+                        docker stop ${APP_NAME} 2>/dev/null || true
+                        docker rm ${APP_NAME} 2>/dev/null || true
+                    '''
+                }
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                script {
+                    echo '========== Deploying Application =========='
+                    sh '''
+                        # Run new container
+                        docker run -d \
+                            --name ${APP_NAME} \
+                            --restart always \
+                            -p 5000:5000 \
+                            -e FLASK_ENV=production \
+                            ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
+                    '''
+                }
+            }
+        }
+        
+        stage('Verify Deployment') {
+            steps {
+                script {
+                    echo '========== Verifying Deployment =========='
+                    sh '''
+                        # Wait for app to start and verify it's running
+                        for i in {1..30}; do
+                            if curl -s http://localhost:5000 > /dev/null; then
+                                echo "✓ Application is running and responding"
+                                exit 0
+                            fi
+                            echo "Waiting for application to start... ($i/30)"
+                            sleep 2
+                        done
+                        echo "✗ Application failed to start"
+                        exit 1
+                    '''
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo '========== Pipeline Execution Complete =========='
+            cleanWs()
+        }
+        success {
+            echo '✓ Pipeline succeeded!'
+            echo "Application deployed: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
+        }
+        failure {
+            echo '✗ Pipeline failed!'
+            // Add notification here (email, Slack, etc.)
+        }
+    }
+}

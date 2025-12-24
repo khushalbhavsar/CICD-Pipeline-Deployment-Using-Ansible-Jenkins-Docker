@@ -1,0 +1,34 @@
+---
+# Main Ansible Playbook for CI/CD Pipeline Setup
+# This playbook installs and configures Jenkins, Docker, and deploys the application
+
+- hosts: all
+  become: yes
+  vars:
+    app_name: "cicd-python-app"
+    app_port: 5000
+    docker_image: "{{ app_name }}:latest"
+  
+  pre_tasks:
+    - name: Update package cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+  
+  roles:
+    - role: jenkins
+      tags: [jenkins]
+    - role: docker
+      tags: [docker]
+    - role: deploy_app
+      tags: [deploy]
+  
+  post_tasks:
+    - name: Display deployment summary
+      debug:
+        msg:
+          - "CI/CD Pipeline setup completed successfully"
+          - "Jenkins: http://{{ ansible_default_ipv4.address }}:8080"
+          - "Application: http://{{ ansible_default_ipv4.address }}:{{ app_port }}"
+          - "Docker is running and configured"

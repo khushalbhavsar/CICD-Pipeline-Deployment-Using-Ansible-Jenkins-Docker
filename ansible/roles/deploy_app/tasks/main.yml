@@ -1,0 +1,52 @@
+---
+# Application Deployment Role
+
+- name: Clone application repository
+  git:
+    repo: "{{ app_repo_url | default('https://github.com/yourusername/cicd-python-app.git') }}"
+    dest: /tmp/app
+    version: main
+  register: git_clone
+  ignore_errors: yes
+  tags: [deploy]
+
+- name: Build Docker image from Dockerfile
+  docker_image:
+    name: "{{ app_name }}"
+    tag: latest
+    build:
+      path: /tmp/app
+    state: present
+  when: git_clone is succeeded
+  tags: [deploy]
+
+- name: Stop existing app container
+  docker_container:
+    name: "{{ app_name }}"
+    state: absent
+  ignore_errors: yes
+  tags: [deploy]
+
+- name: Run application container
+  docker_container:
+    name: "{{ app_name }}"
+    image: "{{ app_name }}:latest"
+    state: started
+    restart_policy: always
+    ports:
+      - "{{ app_port }}:{{ app_port }}"
+    env:
+      FLASK_ENV: "{{ flask_env | default('production') }}"
+    networks:
+      - name: bridge
+  tags: [deploy]
+
+- name: Verify container is running
+  uri:
+    url: "http://localhost:{{ app_port }}"
+    status_code: 200
+  register: container_check
+  retries: 10
+  delay: 2
+  until: container_check.status == 200
+  tags: [deploy]

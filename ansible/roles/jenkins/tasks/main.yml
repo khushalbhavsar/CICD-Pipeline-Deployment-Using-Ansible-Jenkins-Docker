@@ -1,0 +1,63 @@
+---
+# Jenkins Installation and Configuration Role
+
+- name: Install Java (OpenJDK 11)
+  apt:
+    name: openjdk-11-jdk
+    state: present
+    update_cache: yes
+  register: java_install
+  notify: restart jenkins
+
+- name: Add Jenkins GPG key
+  apt_key:
+    url: https://pkg.jenkins.io/debian/jenkins.io.key
+    state: present
+  register: jenkins_key
+  until: jenkins_key is succeeded
+  retries: 3
+
+- name: Add Jenkins repository
+  apt_repository:
+    repo: deb https://pkg.jenkins.io/debian-stable binary/
+    state: present
+    filename: jenkins
+
+- name: Install Jenkins
+  apt:
+    name: jenkins
+    state: present
+    update_cache: yes
+  register: jenkins_install
+
+- name: Start Jenkins service
+  service:
+    name: jenkins
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Wait for Jenkins to start
+  uri:
+    url: http://localhost:8080
+    status_code: 200, 403
+    timeout: 30
+  register: result
+  until: result.status in [200, 403]
+  retries: 10
+  delay: 3
+
+- name: Create Jenkins jobs directory
+  file:
+    path: /var/lib/jenkins/jobs
+    state: directory
+    owner: jenkins
+    group: jenkins
+    mode: '0755'
+
+- name: Add jenkins user to docker group
+  user:
+    name: jenkins
+    groups: docker
+    append: yes
+  notify: restart jenkins
